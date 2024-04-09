@@ -1,0 +1,49 @@
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+    }
+  
+  stages {
+    stage('CheckOut') {
+      steps {
+        echo 'Checkout the source code from GitHub'
+        git branch: 'master', url: 'https://github.com/panakaj123/staragile-insurance-project.git'
+            }
+    }
+     stage('Package') {
+      steps {
+        echo 'Generate a jar file the package using Maven'
+        sh 'mvn clean package'
+            }
+    }
+     stage('Publish TestNG report') {
+      steps {
+        echo 'Generate a TestNG report'
+        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: '/var/lib/jenkins/workspace/project_insure/target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+            }
+         }
+     stage('Create Docker Image') {
+      steps{
+          script{
+              sh 'docker build -t panakaj123/insurance_project:1.0 .'
+                }
+            }
+    }
+     stage('Docker Login & Docker Push') {
+      steps {
+        echo 'Docker Login & Docker Push'
+        withCredentials([usernamePassword(credentialsId: 'Dockerlogin', passwordVariable: 'dockerpass', usernameVariable: 'dockeruser')]) {
+         sh 'docker login -u ${dockeruser} -p ${dockerpass}'
+         sh 'docker push panakaj123/insurance_project:1.0'
+                       }
+                    }
+             }
+      stage('Configure and Deploy to the test-server'){
+       steps{ 
+        ansiblePlaybook credentialsId: 'ansiblessh', disableHostKeyChecking: true, installation: 'ansible', inventory: '/etc/ansible/hosts', playbook: 'ansible-playbook.yml', vaultTmpPath: ''
+         }
+         } 
+         }
+    }
