@@ -27,7 +27,7 @@ pipeline {
      stage('Create Docker Image') {
       steps{
           script{
-              sh 'docker build -t panakaj123/insurance_project:1.0 .'
+              sh 'docker build -t panakaj123/project_insurance:1.0 .'
                 }
             }
     }
@@ -36,7 +36,7 @@ pipeline {
         echo 'Docker Login & Docker Push'
         withCredentials([usernamePassword(credentialsId: 'Dockerlogin', passwordVariable: 'dockerpass', usernameVariable: 'dockeruser')]) {
          sh 'docker login -u ${dockeruser} -p ${dockerpass}'
-         sh 'docker push panakaj123/insurance_project:1.0'
+         sh 'docker push panakaj123/project_insurance:1.0'
                        }
                     }
              }
